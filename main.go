@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	jsonschema "github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/urfave/cli/v3"
@@ -32,9 +33,11 @@ func main() {
 				log.Fatalf("Must pass a configuration filename")
 			} else {
 				config_file_path := cmd.Args().Get(0)
-				json_config := validate_configuration(config_file_path)
+
+				jsonConfig := validate_configuration(config_file_path)
+
 				if o := cmd.String("output"); o != "" {
-					json_to_file(json_config, o)
+					json_to_file(jsonConfig, o)
 				}
 			}
 			return nil
@@ -72,8 +75,9 @@ func validate_configuration(config_file string) interface{} {
 	}
 
 	v := decodeFile(config_file)
+	expandedConfig := replace_variables(v)
 
-	if err = schema.Validate(v); err != nil {
+	if err = schema.Validate(expandedConfig); err != nil {
 		if ve, ok := err.(*jsonschema.ValidationError); ok {
 			b, _ := json.MarshalIndent(ve.DetailedOutput(), "", "  ")
 
@@ -85,7 +89,7 @@ func validate_configuration(config_file string) interface{} {
 		fmt.Println("Valid OpenTelemetry Configuration!")
 	}
 
-	return v
+	return expandedConfig
 }
 
 func decodeFile(file string) interface{} {
@@ -135,4 +139,70 @@ func json_to_file(j interface{}, out_file string) {
 	if err != nil {
 		log.Fatalf("Unable to write output file: %v", err)
 	}
+}
+
+func replace_variables(c interface{}) interface{} {
+	expandedConfig := make(map[string]any)
+	m, _ := c.(map[string]any)
+	for k := range m {
+		val := expandValues(m[k])
+		expandedConfig[k] = val
+	}
+
+	return expandedConfig
+}
+
+func expandValues(value any) any {
+	switch v := value.(type) {
+	case string:
+		if !strings.Contains(v, "${") || !strings.Contains(v, "}") {
+			// No URIs to expand.
+			// return v, false
+			return v
+		}
+
+		return expandString(v)
+	case []any:
+		l := []any{}
+		for _, mv := range v {
+			newValues := expandValues(mv)
+			l = append(l, newValues)
+		}
+		return l
+	case map[string]any:
+		nmap := make(map[string]any)
+
+		for mk, mv := range v {
+			updated := expandValues(mv)
+			nmap[mk] = updated
+		}
+
+		return nmap
+	}
+
+	return value
+}
+
+// replace environment variables ${EXAMPLE} with their value and continue to
+// try replacing variables until there are no more, meaning ${EXAMPLE} could
+// contain another variable ${ANOTHER_VARIABLE}. But stop after 100 iterations
+// to prevent an infinite loop
+func expandString(s string) string {
+	result := s
+	for i := 0; i < 100; i++ {
+		if !strings.Contains(result, "${") || !strings.Contains(result, "}") {
+			break
+		}
+
+		closeIndex := strings.Index(result, "}")
+		openIndex := strings.LastIndex(result[:closeIndex+1], "${")
+
+		fullEnvVar := result[openIndex : closeIndex+1]
+		envVar := result[openIndex+2 : closeIndex]
+
+		newValue := os.Getenv(envVar)
+		result = strings.ReplaceAll(result, fullEnvVar, newValue)
+	}
+
+	return result
 }
