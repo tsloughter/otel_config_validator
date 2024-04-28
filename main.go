@@ -164,20 +164,20 @@ func expandValues(value any) any {
 		return expandString(v)
 	case []any:
 		l := []any{}
-		for _, mv := range v {
-			newValues := expandValues(mv)
-			l = append(l, newValues)
+		for _, e := range v {
+			newElement := expandValues(e)
+			l = append(l, newElement)
 		}
 		return l
 	case map[string]any:
-		nmap := make(map[string]any)
+		newMap := make(map[string]any)
 
-		for mk, mv := range v {
-			updated := expandValues(mv)
-			nmap[mk] = updated
+		for k, v := range v {
+			updated := expandValues(v)
+			newMap[k] = updated
 		}
 
-		return nmap
+		return newMap
 	}
 
 	return value
