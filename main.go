@@ -58,22 +58,22 @@ func runAction() func(ctx context.Context, cmd *cli.Command) error {
 	}
 }
 
-func validateConfiguration(config_file string) interface{} {
-	schema_files, err := schemaFS.ReadDir("schema")
+func validateConfiguration(configFile string) interface{} {
+	schemaFiles, err := schemaFS.ReadDir("schema")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	c := jsonschema.NewCompiler()
 
-	for _, file := range schema_files {
-		schema_url, err := url.JoinPath("https://opentelemetry.io/otelconfig/", file.Name())
+	for _, file := range schemaFiles {
+		schemaURL, err := url.JoinPath("https://opentelemetry.io/otelconfig/", file.Name())
 		schema, err := schemaFS.ReadFile(filepath.Join("schema", file.Name()))
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if err := c.AddResource(schema_url, bytes.NewReader(schema)); err != nil {
+		if err := c.AddResource(schemaURL, bytes.NewReader(schema)); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -83,8 +83,8 @@ func validateConfiguration(config_file string) interface{} {
 		log.Fatalf("%#v", err)
 	}
 
-	v := decodeFile(config_file)
-	expandedConfig := replace_variables(v)
+	v := decodeFile(configFile)
+	expandedConfig := replaceVariables(v)
 
 	if err = schema.Validate(expandedConfig); err != nil {
 		if ve, ok := err.(*jsonschema.ValidationError); ok {
@@ -134,16 +134,16 @@ func decodeYAML(file string) interface{} {
 	return v
 }
 
-func jsonToFile(j interface{}, out_file string) {
-	ext := filepath.Ext(out_file)
+func jsonToFile(j interface{}, outFile string) {
+	ext := filepath.Ext(outFile)
 	if ext == ".yaml" || ext == ".yml" {
 		yamlString, err := yaml.Marshal(j)
-		err = os.WriteFile(out_file, yamlString, 0644)
+		err = os.WriteFile(outFile, yamlString, 0644)
 		if err != nil {
 			log.Fatalf("Unable to write output file: %v", err)
 		}
 
-		err = os.WriteFile(out_file, yamlString, 0644)
+		err = os.WriteFile(outFile, yamlString, 0644)
 		if err != nil {
 			log.Fatalf("Unable to write output file: %v", err)
 		}
@@ -153,16 +153,16 @@ func jsonToFile(j interface{}, out_file string) {
 			log.Fatalf("Unable to convert to json: %v", err)
 		}
 
-		err = os.WriteFile(out_file, jsonString, 0644)
+		err = os.WriteFile(outFile, jsonString, 0644)
 		if err != nil {
 			log.Fatalf("Unable to write output file: %v", err)
 		}
 	} else {
-		log.Fatalf("Unknown extension on output file %v", out_file)
+		log.Fatalf("Unknown extension on output file %v", outFile)
 	}
 }
 
-func replace_variables(c interface{}) interface{} {
+func replaceVariables(c interface{}) interface{} {
 	expandedConfig := make(map[string]any)
 	m, _ := c.(map[string]any)
 	for k := range m {
