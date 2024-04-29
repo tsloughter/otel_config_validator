@@ -20,7 +20,6 @@ The format (json or yaml) of the output is based on the extension (`.json` or
 
 ```
 $ ./otel_config_validator -o out.json examples/kitchen-sink.yaml
-Valid OpenTelemetry Configuration!
 ```
 
 Environment variable substitution is supported with the syntax `${VARIABLE}`.
