@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -15,6 +16,9 @@ import (
 	"github.com/urfave/cli/v3"
 	yaml "gopkg.in/yaml.v3"
 )
+
+//go:embed schema/*
+var schemaFS embed.FS
 
 func main() {
 	log.SetFlags(0)
@@ -56,16 +60,16 @@ func runAction() func(ctx context.Context, cmd *cli.Command) error {
 }
 
 func validateConfiguration(config_file string) interface{} {
-	schema_files, err := filepath.Glob("schema/*.json")
+	schema_files, err := schemaFS.ReadDir("schema")
 	if err != nil {
-		log.Fatalf("can't find schema")
+		log.Fatal(err)
 	}
 
 	c := jsonschema.NewCompiler()
 
 	for _, file := range schema_files {
-		schema_url, err := url.JoinPath("https://opentelemetry.io/otelconfig/", filepath.Base(file))
-		schema, err := os.ReadFile(file)
+		schema_url, err := url.JoinPath("https://opentelemetry.io/otelconfig/", file.Name())
+		schema, err := schemaFS.ReadFile(filepath.Join("schema", file.Name()))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -75,7 +79,7 @@ func validateConfiguration(config_file string) interface{} {
 		}
 	}
 
-	schema, err := c.Compile("schema/opentelemetry_configuration.json")
+	schema, err := c.Compile("https://opentelemetry.io/otelconfig/opentelemetry_configuration.json")
 	if err != nil {
 		log.Fatalf("%#v", err)
 	}
