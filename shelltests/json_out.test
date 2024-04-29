@@ -1,6 +1,5 @@
 FILE_FORMAT=0.1 ./otel_config_validator -o out.json shelltests/test.yaml
 >>>
-Valid OpenTelemetry Configuration!
 >>>= 0
 
 jq '.file_format' out.json

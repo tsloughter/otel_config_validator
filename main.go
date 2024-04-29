@@ -5,7 +5,6 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -93,8 +92,6 @@ func validateConfiguration(config_file string) interface{} {
 		} else {
 			log.Fatalf("%#v", err)
 		}
-	} else {
-		fmt.Println("Valid OpenTelemetry Configuration!")
 	}
 
 	return expandedConfig
@@ -161,7 +158,7 @@ func jsonToFile(j interface{}, out_file string) {
 			log.Fatalf("Unable to write output file: %v", err)
 		}
 	} else {
-		log.Fatalf("Unknown extension to output option %v", out_file)
+		log.Fatalf("Unknown extension on output file %v", out_file)
 	}
 }
 
