@@ -46,7 +46,7 @@ func runAction() func(ctx context.Context, cmd *cli.Command) error {
 			jsonConfig := validateConfiguration(configFilePath)
 
 			if o := cmd.String("output"); o != "" {
-				json_to_file(jsonConfig, o)
+				jsonToFile(jsonConfig, o)
 			}
 		}
 		return nil
@@ -133,15 +133,31 @@ func decodeYAML(file string) interface{} {
 	return v
 }
 
-func json_to_file(j interface{}, out_file string) {
-	json_string, err := json.MarshalIndent(j, "", "  ")
-	if err != nil {
-		log.Fatalf("Unable to convert to json: %v", err)
-	}
+func jsonToFile(j interface{}, out_file string) {
+	ext := filepath.Ext(out_file)
+	if ext == ".yaml" || ext == ".yml" {
+		yamlString, err := yaml.Marshal(j)
+		err = os.WriteFile(out_file, yamlString, 0644)
+		if err != nil {
+			log.Fatalf("Unable to write output file: %v", err)
+		}
 
-	err = os.WriteFile(out_file, json_string, 0644)
-	if err != nil {
-		log.Fatalf("Unable to write output file: %v", err)
+		err = os.WriteFile(out_file, yamlString, 0644)
+		if err != nil {
+			log.Fatalf("Unable to write output file: %v", err)
+		}
+	} else if ext == ".json" {
+		jsonString, err := json.MarshalIndent(j, "", "  ")
+		if err != nil {
+			log.Fatalf("Unable to convert to json: %v", err)
+		}
+
+		err = os.WriteFile(out_file, jsonString, 0644)
+		if err != nil {
+			log.Fatalf("Unable to write output file: %v", err)
+		}
+	} else {
+		log.Fatalf("Unknown extension to output option %v", out_file)
 	}
 }
 
