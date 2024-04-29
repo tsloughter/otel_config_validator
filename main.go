@@ -17,6 +17,8 @@ import (
 )
 
 func main() {
+	log.SetFlags(0)
+
 	cmd := &cli.Command{
 		Name:  "otel_config_validator",
 		Usage: "Validate a configuration file against the OpenTelemetry Configuration Schema",
@@ -83,9 +85,7 @@ func validateConfiguration(config_file string) interface{} {
 
 	if err = schema.Validate(expandedConfig); err != nil {
 		if ve, ok := err.(*jsonschema.ValidationError); ok {
-			b, _ := json.MarshalIndent(ve.DetailedOutput(), "", "  ")
-
-			fmt.Println(string(b))
+			log.Fatalf("%#v", ve)
 		} else {
 			log.Fatalf("%#v", err)
 		}
@@ -201,10 +201,11 @@ func expandValues(value any) any {
 	return value
 }
 
-// replace environment variables ${EXAMPLE} with their value and continue to
+// Replace environment variables ${EXAMPLE} with their value and continue to
 // try replacing variables until there are no more, meaning ${EXAMPLE} could
 // contain another variable ${ANOTHER_VARIABLE}. But stop after 100 iterations
-// to prevent an infinite loop
+// to prevent an infinite loop.
+// This does not use os.ExpandVars in order to later support defaults like ${VAR:-default}
 func expandString(s string) string {
 	result := s
 	for i := 0; i < 100; i++ {
