@@ -206,7 +206,7 @@ func expandValues(value any) any {
 // try replacing variables until there are no more, meaning ${EXAMPLE} could
 // contain another variable ${ANOTHER_VARIABLE}. But stop after 100 iterations
 // to prevent an infinite loop.
-// This does not use os.ExpandVars in order to later support defaults like ${VAR:-default}
+// This does not use os.ExpandVars in order to support defaults like ${VAR:default}
 func expandString(s string) string {
 	result := s
 	for i := 0; i < 100; i++ {
@@ -220,7 +220,20 @@ func expandString(s string) string {
 		fullEnvVar := result[openIndex : closeIndex+1]
 		envVar := result[openIndex+2 : closeIndex]
 
-		newValue := os.Getenv(envVar)
+		maybeDefaultIndex := strings.Index(envVar, ":")
+
+		var newValue string
+		if maybeDefaultIndex != -1 {
+			d := envVar[maybeDefaultIndex+1:]
+			envVar = envVar[:maybeDefaultIndex]
+			newValue = os.Getenv(envVar)
+			if strings.EqualFold(newValue, "") {
+				newValue = d
+			}
+		} else {
+			newValue = os.Getenv(envVar)
+		}
+
 		result = strings.ReplaceAll(result, fullEnvVar, newValue)
 	}
 

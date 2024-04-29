@@ -41,6 +41,11 @@ func TestExpandString(t *testing.T) {
 
 	s = expandString("${VARIABLE2")
 	if !strings.Contains(s, "${VARIABLE2") {
-		t.Errorf("String \"%v\" should still containe ${VARIABLE2", s)
+		t.Errorf("String \"%v\" should still contains ${VARIABLE2", s)
+	}
+
+	s = expandString("${UNDEFINED:mydefault}")
+	if !strings.EqualFold(s, "mydefault") {
+		t.Errorf("String \"%v\" should be mydefault", s)
 	}
 }

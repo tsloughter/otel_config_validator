@@ -23,6 +23,9 @@ $ ./otel_config_validator -o out.json examples/kitchen-sink.yaml
 Valid OpenTelemetry Configuration!
 ```
 
+Environment variable substitution is supported with the syntax `${VARIABLE}`.
+Default values are supported in the form `${VARIABLE:default}`.
+
 ### Testing
 
 Run the Go unit tests:
