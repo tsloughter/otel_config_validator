@@ -1,7 +1,7 @@
 ## OpenTelemetry SDK Configuration Validator
 
 This application will validate a yaml or json file against the [OpenTelemetry
-SDK Configuration schema]().
+SDK Configuration schema](https://github.com/open-telemetry/opentelemetry-configuration/).
 
 ### Build
 
