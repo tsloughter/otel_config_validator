@@ -28,20 +28,7 @@ func main() {
 				Usage:    "where to output the configuration as json after validation",
 			},
 		},
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			if cmd.Args().Len() < 1 {
-				log.Fatalf("Must pass a configuration filename")
-			} else {
-				config_file_path := cmd.Args().Get(0)
-
-				jsonConfig := validate_configuration(config_file_path)
-
-				if o := cmd.String("output"); o != "" {
-					json_to_file(jsonConfig, o)
-				}
-			}
-			return nil
-		},
+		Action: runAction(),
 	}
 
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
@@ -49,7 +36,24 @@ func main() {
 	}
 }
 
-func validate_configuration(config_file string) interface{} {
+func runAction() func(ctx context.Context, cmd *cli.Command) error {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		if cmd.Args().Len() < 1 {
+			log.Fatalf("Must pass a configuration filename")
+		} else {
+			configFilePath := cmd.Args().Get(0)
+
+			jsonConfig := validateConfiguration(configFilePath)
+
+			if o := cmd.String("output"); o != "" {
+				json_to_file(jsonConfig, o)
+			}
+		}
+		return nil
+	}
+}
+
+func validateConfiguration(config_file string) interface{} {
 	schema_files, err := filepath.Glob("schema/*.json")
 	if err != nil {
 		log.Fatalf("can't find schema")
@@ -156,8 +160,6 @@ func expandValues(value any) any {
 	switch v := value.(type) {
 	case string:
 		if !strings.Contains(v, "${") || !strings.Contains(v, "}") {
-			// No URIs to expand.
-			// return v, false
 			return v
 		}
 

@@ -1,0 +1,30 @@
+name: Shell tests
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  shelltests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21.x'
+    - name: Install dependencies
+      run: go get .
+    - name: Build
+      run: go build -v ./...
+
+    - name: Install and run shelltestrunner
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shelltestrunner
+
+        shelltest -c --diff --all shelltests/*.test
