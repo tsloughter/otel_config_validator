@@ -27,7 +27,7 @@ func main() {
 				Name:     "output",
 				Aliases:  []string{"o"},
 				OnlyOnce: true,
-				Usage:    "where to output the configuration as json after validation",
+				Usage:    "optionally where to output the configuration (as json or yaml) after variable expansion and validation",
 			},
 		},
 		Action: runAction(),
