@@ -220,11 +220,11 @@ func expandString(s string) string {
 		fullEnvVar := result[openIndex : closeIndex+1]
 		envVar := result[openIndex+2 : closeIndex]
 
-		maybeDefaultIndex := strings.Index(envVar, ":")
+		maybeDefaultIndex := strings.Index(envVar, ":-")
 
 		var newValue string
 		if maybeDefaultIndex != -1 {
-			d := envVar[maybeDefaultIndex+1:]
+			d := envVar[maybeDefaultIndex+2:]
 			envVar = envVar[:maybeDefaultIndex]
 			newValue = os.Getenv(envVar)
 			if strings.EqualFold(newValue, "") {
