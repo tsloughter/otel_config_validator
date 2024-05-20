@@ -1,0 +1,6 @@
+.git
+examples
+Dockerfile*
+LICENSE
+main_test.go
+shelltests
